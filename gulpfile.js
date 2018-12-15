@@ -1,4 +1,6 @@
 const PUBLIC_FOLDER = 'public';
+// if true, then browser-sync will be used instead of livereload
+const LOCAL_DEV = true;
 let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
 
 const fs = require('fs');
@@ -24,7 +26,7 @@ gulp.task('html', () => {
       extensions: 'html',
     }))
     .pipe(gulp.dest(config.html.dest))
-    .pipe(browserSync.stream());
+    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
 gulp.task('css', () => {
@@ -94,7 +96,7 @@ gulp.task('css', () => {
     )
 
     .pipe(gulp.dest(config.css.dest))
-    .pipe(browserSync.stream());
+    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
 gulp.task('javascript', () => {
@@ -126,7 +128,7 @@ gulp.task('javascript', () => {
         .pipe(_.if(PRODUCTION_MODE, _.streamify(_.uglify())))
 
         .pipe(gulp.dest(config.javascript.dest))
-        .pipe(browserSync.stream());
+        .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
     })
     .filter(task => task);
 });
@@ -178,14 +180,14 @@ gulp.task('img', () => {
 
     ]))
     .pipe(gulp.dest(config.img.dest))
-    .pipe(browserSync.stream());
+    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
 gulp.task('static', () => {
   gulp
     .src(config.static.watchOn)
     .pipe(gulp.dest(config.static.dest))
-    .pipe(browserSync.stream());
+    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
 gulp.task('icons', () => {
@@ -216,8 +218,17 @@ gulp.task('icons', () => {
           precision: 2,
         },
       }))
-      .pipe(gulp.dest(task.dest));
+      .pipe(gulp.dest(task.dest))
+      .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
   });
+});
+
+gulp.task('staticWatch', () => {
+  if (LOCAL_DEV) {
+    browserSync.reload();
+  } else {
+    _.livereload.reload();
+  }
 });
 
 gulp.task('clean', () => {
@@ -233,6 +244,10 @@ gulp.task('browser-sync', () => {
     open: false,
   });
 });
+
+gulp.task('livereload', () => {
+  _.livereload.listen();
+})
 
 gulp.task('build', () => {
   for (let task in config) {
@@ -253,7 +268,11 @@ gulp.task('watch', () => {
     }
   }
 
-  gulp.start('browser-sync');
+  if (LOCAL_DEV) {
+    gulp.start('browser-sync');
+  } else {
+    gulp.start('livereload');
+  }
 
   gulp.start('build');
 });

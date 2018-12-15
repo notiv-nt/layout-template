@@ -45,4 +45,8 @@ module.exports = ({ root, dist }) => ({
       iconId: 'icon-%s'
     }
   ],
+
+  staticWatch: [
+    { watchOn: p(root, 'public/**/*.php') },
+  ],
 });
