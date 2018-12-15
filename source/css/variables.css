@@ -1,0 +1,32 @@
+$debug: false;
+// $debug: true;
+
+$from-xs: (min-width: 0px);
+
+$from-sm: (min-width: 576px);
+$to-sm: (max-width: 575px);
+
+$from-md: (min-width: 768px);
+$to-md: (max-width: 767px);
+
+$from-lg: (min-width: 992px);
+$to-lg: (max-width: 991px);
+
+$from-xl: (min-width: 1200px);
+$to-xl: (max-width: 1199px);
+
+:root {
+  --font-size: 14px;
+  --line-height: 1.7;
+
+  --font: var(--font-size)/var(--line-height) 'Open Sans', sans-serif;
+
+  --transition-duration: 250ms;
+  --transition-function: cubic-bezier(.5, 0, .2, 1);
+
+  --grid-count: 12;
+  --grid-gap: 20px;
+
+  --focus-outline: 2px solid rgba(0, 153, 255, .7);
+  --focus-outline-offset: 1px;
+}
