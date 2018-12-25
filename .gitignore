@@ -84,3 +84,6 @@ typings/
 # design
 *.psd
 *.xd
+
+# Dist folders
+public

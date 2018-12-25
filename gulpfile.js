@@ -21,10 +21,12 @@ gulp.task('html', () => {
   gulp
     .src(config.html.entry)
     .pipe(errorNotifier())
-    .pipe(_.include({
-      includePaths: [config.html.root],
-      extensions: 'html',
-    }))
+    .pipe(
+      _.include({
+        includePaths: [config.html.root],
+        extensions: 'html',
+      })
+    )
     .pipe(gulp.dest(config.html.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
@@ -35,9 +37,7 @@ gulp.task('css', () => {
     .pipe(errorNotifier())
 
     .pipe(
-      _.postcss([
-        require('postcss-easy-import')(),
-      ], {
+      _.postcss([require('postcss-easy-import')()], {
         parser: require('postcss-comment'),
       })
     )
@@ -48,12 +48,10 @@ gulp.task('css', () => {
           // mixins: {
           //   responsive(rule, from, to) {
           //     return rule.replaceWith('nope: 10px');
-
           //     const minMedia = '576px';
           //     const maxMedia = '1200px';
           //     const unitLess = (unit) => unit.replace(/[^a-z]+/gm, '');
           //     const value = `calc(${from} + (${unitLess(to)} - ${unitLess(to)}) * ((100vw - ${minMedia}) / (${unitLess(maxMedia)} - ${unitLess(minMedia)})));`;
-
           //     return `${rule}: ${value}`;
           //   },
           // },
@@ -103,7 +101,7 @@ gulp.task('javascript', () => {
   const browserify = require('browserify');
 
   const tasks = config.javascript.entry
-    .map((entry) => {
+    .map(entry => {
       if (!fs.existsSync(entry)) {
         return;
       }
@@ -111,7 +109,7 @@ gulp.task('javascript', () => {
       return browserify({ entries: entry, debug: !PRODUCTION_MODE })
         .transform(require('babelify'), {
           presets: ['@babel/preset-env'],
-          sourceMaps: !PRODUCTION_MODE
+          sourceMaps: !PRODUCTION_MODE,
         })
 
         .bundle()
@@ -121,9 +119,11 @@ gulp.task('javascript', () => {
         .pipe(require('vinyl-source-stream')(entry))
         .pipe(require('vinyl-buffer')())
 
-        .pipe(_.rename({
-          dirname: '',
-        }))
+        .pipe(
+          _.rename({
+            dirname: '',
+          })
+        )
 
         .pipe(_.if(PRODUCTION_MODE, _.streamify(_.uglify())))
 
@@ -136,49 +136,52 @@ gulp.task('javascript', () => {
 gulp.task('img', () => {
   gulp
     .src(config.img.watchOn)
-    .pipe(_.imagemin([
-      // PNG
-      require('imagemin-pngquant')({
-        speed: 1,
-        quality: 90
-      }),
+    .pipe(
+      _.imagemin([
+        // PNG
+        require('imagemin-pngquant')({
+          speed: 1,
+          quality: 90,
+        }),
 
-      require('imagemin-zopfli')({
-        more: true
-        // iterations: 50 // very slow but more effective
-      }),
+        require('imagemin-zopfli')({
+          more: true,
+          // iterations: 50 // very slow but more effective
+        }),
 
-      // gif
-      // _.imagemin.gifsicle({
-      //     interlaced: true,
-      //     optimizationLevel: 3
-      // }),
+        // gif
+        // _.imagemin.gifsicle({
+        //     interlaced: true,
+        //     optimizationLevel: 3
+        // }),
 
-      // gif very light lossy, use only one of gifsicle or Giflossy
-      require('imagemin-giflossy')({
-        optimizationLevel: 3,
-        optimize: 3, // keep-empty: Preserve empty transparent frames
-        lossy: 2
-      }),
+        // gif very light lossy, use only one of gifsicle or Giflossy
+        require('imagemin-giflossy')({
+          optimizationLevel: 3,
+          optimize: 3, // keep-empty: Preserve empty transparent frames
+          lossy: 2,
+        }),
 
-      // svg
-      _.imagemin.svgo({
-        plugins: [{
-          removeViewBox: false
-        }]
-      }),
+        // svg
+        _.imagemin.svgo({
+          plugins: [
+            {
+              removeViewBox: false,
+            },
+          ],
+        }),
 
-      // jpg lossless
-      _.imagemin.jpegtran({
-        progressive: true
-      }),
+        // jpg lossless
+        _.imagemin.jpegtran({
+          progressive: true,
+        }),
 
-      // jpg very light lossy, use vs jpegtran
-      require('imagemin-mozjpeg')({
-        quality: 75,
-      }),
-
-    ]))
+        // jpg very light lossy, use vs jpegtran
+        require('imagemin-mozjpeg')({
+          quality: 75,
+        }),
+      ])
+    )
     .pipe(gulp.dest(config.img.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
@@ -191,33 +194,35 @@ gulp.task('static', () => {
 });
 
 gulp.task('icons', () => {
-  const tasks = config.icons.map((task) => {
+  const tasks = config.icons.map(task => {
     gulp
       .src(task.watchOn)
       .pipe(errorNotifier())
-      .pipe(_.svgSprite({
-        shape: {
-          id: {
-            generator: task.iconId,
-            separator: '-',
-            whitespace: '-',
+      .pipe(
+        _.svgSprite({
+          shape: {
+            id: {
+              generator: task.iconId,
+              separator: '-',
+              whitespace: '-',
+            },
           },
-        },
-        mode: {
-          symbol: {
-            dest: '.',
-            sprite: task.fileName,
-            // example: true,
+          mode: {
+            symbol: {
+              dest: '.',
+              sprite: task.fileName,
+              // example: true,
+            },
           },
-        },
-        svg: {
-          xmlDeclaration: false,
-          doctypeDeclaration: false,
-          namespaceIDs: false,
-          namespaceClassnames: false,
-          precision: 2,
-        },
-      }))
+          svg: {
+            xmlDeclaration: false,
+            doctypeDeclaration: false,
+            namespaceIDs: false,
+            namespaceClassnames: false,
+            precision: 2,
+          },
+        })
+      )
       .pipe(gulp.dest(task.dest))
       .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
   });
@@ -247,7 +252,7 @@ gulp.task('browser-sync', () => {
 
 gulp.task('livereload', () => {
   _.livereload.listen();
-})
+});
 
 gulp.task('build', () => {
   for (let task in config) {
@@ -258,12 +263,10 @@ gulp.task('build', () => {
 gulp.task('watch', () => {
   for (let task in config) {
     if (Array.isArray(config[task])) {
-      config[task].forEach((t) => {
+      config[task].forEach(t => {
         _.watch(t.watchOn, () => gulp.start(task));
       });
-    }
-
-    else {
+    } else {
       _.watch(config[task].watchOn, () => gulp.start(task));
     }
   }
