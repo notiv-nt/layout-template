@@ -125,7 +125,7 @@ gulp.task('javascript', () => {
           })
         )
 
-        .pipe(_.if(PRODUCTION_MODE, _.streamify(_.uglify())))
+        .pipe(_.if(PRODUCTION_MODE, _.streamify(_.terser())))
 
         .pipe(gulp.dest(config.javascript.dest))
         .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
