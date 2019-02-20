@@ -1,46 +1,22 @@
-$debug: false;
-// $debug: true;
+// prettier-ignore
+$from-xs: ( min-width: 0px );
 
-$from-xs: (
-  min-width: 0px
-);
+// prettier-ignore
+$from-sm: ( min-width: 576px );
+// prettier-ignore
+$to-sm: ( max-width: 575px );
 
-$from-sm: (
-  min-width: 576px
-);
-$to-sm: (
-  max-width: 575px
-);
+// prettier-ignore
+$from-md: ( min-width: 768px );
+// prettier-ignore
+$to-md: ( max-width: 767px );
 
-$from-md: (
-  min-width: 768px
-);
-$to-md: (
-  max-width: 767px
-);
+// prettier-ignore
+$from-lg: ( min-width: 992px );
+// prettier-ignore
+$to-lg: ( max-width: 991px );
 
-$from-lg: (
-  min-width: 992px
-);
-$to-lg: (
-  max-width: 991px
-);
-
-$from-xl: (
-  min-width: 1200px
-);
-$to-xl: (
-  max-width: 1199px
-);
-
-:root {
-  --font-size: 14px;
-  --line-height: 1.7;
-
-  --font: 400 var(--font-size) / var(--line-height) 'Open Sans', sans-serif;
-
-  --transition-duration: 250ms;
-  --transition-function: cubic-bezier(0.5, 0, 0.2, 1);
-
-  --grid-gap: 20px;
-}
+// prettier-ignore
+$from-xl: ( min-width: 1200px );
+// prettier-ignore
+$to-xl: ( max-width: 1199px );

@@ -1,7 +1,7 @@
 .u {
   &-icon {
     width: 1em;
-    height: 1em;
+    height: @width;
     fill: currentColor;
 
     display: inline-block;

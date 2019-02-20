@@ -1,13 +1,21 @@
-body *,
-::before,
-::after {
-  transition-timing-function: var(--transition-function);
-  transition-duration: var(--transition-duration);
-  transition-property: none;
+:root {
+  --font-size: 1.4rem;
+  --line-height: 1.7;
+  --font-family: 'Open Sans', sans-serif;
+
+  --transition-duration: 250ms;
+  --transition-delay: 0s;
+  --transition-function: cubic-bezier(0.5, 0, 0.2, 1);
+
+  --text-color: #000;
+
+  --grid-gap: 2rem;
 }
 
 html {
-  font: var(--font);
+  font: 62.5% / var(--line-height) var(--font-family);
+  word-break: break-word;
+  word-wrap: break-word;
 
   &:not(.is-keyboard-navigation) :focus {
     outline: none;
@@ -16,8 +24,10 @@ html {
 
 body {
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   color: var(--text-color);
   min-height: 100vh;
+  font-size: var(--font-size);
 }
 
 a {
@@ -25,7 +35,7 @@ a {
   text-decoration: none;
 }
 
-@if $debug == true {
+@if $isDevelopment {
   body::after {
     position: fixed;
     bottom: 0.5rem;
@@ -37,17 +47,8 @@ a {
     font-size: 12px;
     font-family: sans-serif;
     letter-spacing: 0.07em;
-    z-index: 99999;
+    z-index: 9999;
 
-    content: @to-sm
-      '"XS #{$to-sm}"'
-      @to-md
-      '"SM #{$to-md}"'
-      @to-lg
-      '"MD #{$to-lg}"'
-      @to-xl
-      '"LG #{$to-xl}"'
-      @from-xl
-      '"XL #{$from-xl}"';
+    content: @to-sm '"XS #{$to-sm}"' @to-md '"SM #{$to-md}"' @to-lg '"MD #{$to-lg}"' @to-xl '"LG #{$to-xl}"' @from-xl '"XL #{$from-xl}"';
   }
 }

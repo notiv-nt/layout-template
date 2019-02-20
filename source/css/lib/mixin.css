@@ -10,6 +10,8 @@
   cursor: pointer;
   color: inherit;
   line-height: 1;
+  // ff
+  letter-spacing: inherit;
 }
 
 @mixin visually-hidden {
@@ -21,4 +23,16 @@
   margin: -1px;
   padding: 0;
   border: 0;
+}
+
+@mixin responsive($prop, $min, $max) {
+  #{$prop}: calc(#{$min}px + (#{$max} - #{$min}) * ((100vw - 300px) / (1600 - 300)));
+
+  @media (max-width: 300px) {
+    #{$prop}: $min + px;
+  }
+
+  @media (min-width: 1600px) {
+    #{$prop}: $max + px;
+  }
 }

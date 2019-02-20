@@ -11,7 +11,8 @@ module.exports = ({ root, dist }) => ({
 
   css: {
     watchOn: p(root, 'source/css/**/*.css'),
-    entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
+    // entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
+    entry: [p(root, 'source/css/index.css')],
     dest: p(dist, 'assets/css'),
     lintDest: p(root, 'source/css/'),
   },

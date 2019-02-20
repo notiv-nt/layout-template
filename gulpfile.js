@@ -1,4 +1,4 @@
-const PUBLIC_FOLDER = 'public';
+const PUBLIC_FOLDER = './dist';
 // if true, then browser-sync will be used instead of livereload
 const LOCAL_DEV = true;
 let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
@@ -32,105 +32,89 @@ gulp.task('html', () => {
 });
 
 gulp.task('css', () => {
+  const preSass = [
+    require('postcss-easy-import')(),
+    require('@notiv/postcss-property-lookup')({
+      lookupPattern: /@([a-z-]+)\b/g,
+    }),
+    require('postcss-inline-media'),
+    require('postcss-simple-vars')({
+      silent: true,
+      keep: true,
+      variables: {
+        isDevelopment: !PRODUCTION_MODE,
+      },
+    }),
+  ];
+
+  const postSass = [
+    require('postcss-selector-matches'),
+    require('postcss-selector-not'),
+
+    require('postcss-transition')({
+      duration: 'var(--transition-duration)',
+      delay: 'var(--transition-delay)',
+      timingFunction: 'var(--transition-function)',
+    }),
+
+    require('autoprefixer')({
+      // Work with IE
+      // grid: true,
+      browsers: ['> 0.5%'],
+    }),
+
+    require('css-mqpacker')({
+      sort: sortCSSmq,
+    }),
+  ];
+
+  if (PRODUCTION_MODE) {
+    postSass.splice(
+      postSass.length - 1,
+      0,
+      require('postcss-clean')({
+        level: {
+          1: {
+            specialComments: 0,
+          },
+        },
+      })
+    );
+  }
+
   gulp
     .src(config.css.entry)
     .pipe(errorNotifier())
 
     .pipe(
-      _.postcss([require('postcss-easy-import')()], {
-        parser: require('postcss-comment'),
+      _.postcss(preSass, {
+        parser: require('postcss-scss'),
       })
     )
 
     .pipe(
-      _.postcss([
-        require('postcss-sassy-mixins')({
-          // mixins: {
-          //   responsive(rule, from, to) {
-          //     return rule.replaceWith('nope: 10px');
-          //     const minMedia = '576px';
-          //     const maxMedia = '1200px';
-          //     const unitLess = (unit) => unit.replace(/[^a-z]+/gm, '');
-          //     const value = `calc(${from} + (${unitLess(to)} - ${unitLess(to)}) * ((100vw - ${minMedia}) / (${unitLess(maxMedia)} - ${unitLess(minMedia)})));`;
-          //     return `${rule}: ${value}`;
-          //   },
-          // },
-        }),
-
-        require('@notiv/postcss-property-lookup')({
-          lookupPattern: /@([a-z-]+)\b/g,
-        }),
-        require('postcss-inline-media'),
-
-        require('postcss-map-get'),
-        require('postcss-advanced-variables'),
-
-        require('postcss-media-minmax'),
-        require('postcss-nested-ancestors'),
-        require('postcss-nested'),
-
-        require('postcss-selector-matches'),
-        require('postcss-selector-not'),
-
-        require('postcss-custom-properties')(),
-
-        require('postcss-sass-color-functions'),
-
-        require('autoprefixer')({
-          grid: true,
-          browsers: ['last 2 versions', 'ie 11'],
-        }),
-
-        require('postcss-clean')({
-          level: 2,
-        }),
-
-        require('css-mqpacker')({
-          sort: sortCSSmq,
-        }),
-
-        require('postcss-automath'),
-      ])
+      _.sass({
+        outputStyle: 'expanded',
+      }).on('error', _.sass.logError)
     )
+
+    .pipe(_.postcss(postSass))
 
     .pipe(gulp.dest(config.css.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
 gulp.task('javascript', () => {
-  const browserify = require('browserify');
-
-  const tasks = config.javascript.entry
-    .map(entry => {
-      if (!fs.existsSync(entry)) {
-        return;
-      }
-
-      return browserify({ entries: entry, debug: !PRODUCTION_MODE })
-        .transform(require('babelify'), {
-          presets: ['@babel/preset-env'],
-          sourceMaps: !PRODUCTION_MODE,
-        })
-
-        .bundle()
-        .on('error', errorNotifier.notify)
-        .pipe(errorNotifier())
-
-        .pipe(require('vinyl-source-stream')(entry))
-        .pipe(require('vinyl-buffer')())
-
-        .pipe(
-          _.rename({
-            dirname: '',
-          })
-        )
-
-        .pipe(_.if(PRODUCTION_MODE, _.streamify(_.terser())))
-
-        .pipe(gulp.dest(config.javascript.dest))
-        .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-    })
-    .filter(task => task);
+  gulp
+    .src(config.javascript.entry, { read: false })
+    .pipe(
+      _.parcel({
+        minify: PRODUCTION_MODE,
+        production: PRODUCTION_MODE,
+        outDir: config.javascript.dest,
+      })
+    )
+    .pipe(gulp.dest(config.javascript.dest));
 });
 
 gulp.task('img', () => {
@@ -226,6 +210,14 @@ gulp.task('icons', () => {
       .pipe(gulp.dest(task.dest))
       .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
   });
+});
+
+gulp.task('staticWatch', () => {
+  if (LOCAL_DEV) {
+    browserSync.reload();
+  } else {
+    _.livereload.reload();
+  }
 });
 
 gulp.task('staticWatch', () => {
