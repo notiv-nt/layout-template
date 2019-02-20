@@ -1,60 +1,112 @@
 {
   "name": "@notiv/layout-template",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "build": "gulp build --minify",
-    "start": "gulp watch --minify",
+    "test": "gulp watch --minify",
+    "start": "gulp watch",
     "clean": "gulp clean"
   },
   "dependencies": {
-    "sanitize.css": "latest",
-    "stylelint": "^9.9.0",
-    "stylelint-scss": "^3.4.3"
+    "sanitize.css": "latest"
   },
   "devDependencies": {
-    "@babel/core": "7.2.2",
-    "@babel/preset-env": "7.2.0",
-    "@notiv/postcss-property-lookup": "2.0.4",
-    "autoprefixer": "9.4.2",
-    "babelify": "10.0.0",
-    "browser-sync": "2.26.3",
-    "browserify": "16.2.3",
-    "css-mqpacker": "7.0.0",
+    "stylelint": "^9.9.0",
+    "stylelint-scss": "^3.4.3",
+    "@notiv/postcss-property-lookup": "^2.0.4",
+    "autoprefixer": "^9.4.7",
+    "browser-sync": "^2.26.3",
+    "css-mqpacker": "^7.0.0",
     "gulp": "^3.9.1",
-    "gulp-error-notifier": "1.1.0",
-    "gulp-if": "2.0.2",
-    "gulp-imagemin": "5.0.3",
-    "gulp-include": "2.3.1",
-    "gulp-livereload": "4.0.1",
-    "gulp-load-plugins": "1.5.0",
-    "gulp-postcss": "8.0.0",
-    "gulp-rename": "1.4.0",
-    "gulp-streamify": "1.0.2",
-    "gulp-svg-sprite": "1.5.0",
-    "gulp-terser": "^1.1.6",
-    "gulp-watch": "5.0.1",
-    "imagemin-giflossy": "5.1.10",
-    "imagemin-mozjpeg": "8.0.0",
-    "imagemin-pngquant": "6.0.0",
-    "imagemin-zopfli": "5.1.0",
-    "postcss-advanced-variables": "3.0.0",
-    "postcss-automath": "1.0.1",
-    "postcss-clean": "1.1.0",
-    "postcss-comment": "2.0.0",
-    "postcss-custom-properties": "8.0.9",
-    "postcss-easy-import": "3.0.0",
-    "postcss-inline-media": "1.3.0",
-    "postcss-map-get": "0.2.3",
-    "postcss-media-minmax": "4.0.0",
-    "postcss-nested": "4.1.1",
-    "postcss-nested-ancestors": "2.0.0",
-    "postcss-sass-color-functions": "1.1.0",
-    "postcss-sassy-mixins": "2.1.0",
-    "postcss-selector-matches": "4.0.0",
-    "postcss-selector-not": "4.0.0",
-    "rmfr": "2.0.0",
-    "sort-css-media-queries": "1.4.3",
-    "vinyl-buffer": "1.0.1",
-    "vinyl-source-stream": "2.0.0"
+    "gulp-error-notifier": "^1.1.0",
+    "gulp-if": "^2.0.2",
+    "gulp-imagemin": "^5.0.3",
+    "gulp-include": "^2.3.1",
+    "gulp-livereload": "^4.0.1",
+    "gulp-load-plugins": "^1.5.0",
+    "gulp-parcel": "^0.3.5",
+    "gulp-postcss": "^8.0.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-svg-sprite": "^1.5.0",
+    "gulp-watch": "^5.0.1",
+    "imagemin-giflossy": "^5.1.10",
+    "imagemin-mozjpeg": "^8.0.0",
+    "imagemin-pngquant": "^7.0.0",
+    "imagemin-zopfli": "^6.0.0",
+    "postcss-clean": "^1.1.0",
+    "postcss-easy-import": "^3.0.0",
+    "postcss-inline-media": "^1.3.0",
+    "postcss-scss": "^2.0.0",
+    "postcss-selector-matches": "^4.0.0",
+    "postcss-selector-not": "^4.0.0",
+    "postcss-simple-vars": "^5.0.1",
+    "postcss-transition": "^1.0.0",
+    "rmfr": "^2.0.0",
+    "sort-css-media-queries": "^1.4.3"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 150,
+    "bracketSpacing": true,
+    "proseWrap": "never",
+    "trailingComma": "es5"
+  },
+  "stylelint": {
+    "plugins": [
+      "stylelint-scss"
+    ],
+    "rules": {
+      "indentation": 2,
+      "string-quotes": "single",
+      "selector-max-id": 0,
+      "selector-list-comma-newline-after": "always",
+      "rule-empty-line-before": [
+        "always",
+        {
+          "ignore": [
+            "after-comment"
+          ],
+          "except": [
+            "after-single-line-comment",
+            "first-nested"
+          ]
+        }
+      ],
+      "comment-empty-line-before": [
+        "always",
+        {
+          "except": [
+            "first-nested"
+          ]
+        }
+      ],
+      "block-opening-brace-space-before": "always",
+      "declaration-colon-space-after": "always-single-line",
+      "declaration-colon-space-before": "never",
+      "declaration-block-single-line-max-declarations": 1,
+      "declaration-property-value-blacklist": {
+        "/^border/": [
+          "none"
+        ]
+      },
+      "at-rule-empty-line-before": [
+        "always",
+        {
+          "ignore": [
+            "after-comment",
+            "blockless-after-same-name-blockless"
+          ],
+          "except": [
+            "first-nested"
+          ]
+        }
+      ],
+      "max-nesting-depth": 3,
+      "scss/dollar-variable-pattern": "^_?[a-z]+[\\w-]*$",
+      "scss/at-extend-no-missing-placeholder": true,
+      "declaration-block-no-duplicate-properties": true
+    }
   }
 }
