@@ -11,17 +11,15 @@ module.exports = ({ root, dist }) => ({
 
   css: {
     watchOn: p(root, 'source/css/**/*.css'),
-    entry: [p(root, 'source/css/index.css')],
+    entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
     dest: p(dist, 'assets/css'),
     lintDest: p(root, 'source/css/'),
   },
 
   javascript: {
     watchOn: p(root, 'source/js/**/*.js'),
-    entry: [p(root, 'source/js/index.js'), p(root, 'source/js/main.js'), p(root, 'source/js/sw.js')],
+    entry: [p(root, 'source/js/index.js')],
     dest: p(dist, 'assets/js'),
-    // Relative to dest
-    mapsDir: 'maps',
   },
 
   img: {
@@ -31,7 +29,7 @@ module.exports = ({ root, dist }) => ({
 
   static: {
     watchOn: p(root, 'source/static/**/*'),
-    dest: p(dist, 'assets/static/'),
+    dest: p(dist),
   },
 
   icons: [
