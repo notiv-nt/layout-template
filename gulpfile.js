@@ -107,13 +107,16 @@ gulp.task('css', () => {
 gulp.task('javascript', () => {
   gulp
     .src(config.javascript.entry, { read: false })
+    // .pipe(_.sourcemaps.init())
     .pipe(
       _.parcel({
         minify: PRODUCTION_MODE,
         production: PRODUCTION_MODE,
         outDir: config.javascript.dest,
+        publicURL: config.javascript.mapsPath,
       })
     )
+    // .pipe(_.sourcemaps.write())
     .pipe(gulp.dest(config.javascript.dest));
 });
 
@@ -178,7 +181,7 @@ gulp.task('static', () => {
 });
 
 gulp.task('icons', () => {
-  const tasks = config.icons.map(task => {
+  const tasks = config.icons.map((task) => {
     gulp
       .src(task.watchOn)
       .pipe(errorNotifier())
@@ -255,7 +258,7 @@ gulp.task('build', () => {
 gulp.task('watch', () => {
   for (let task in config) {
     if (Array.isArray(config[task])) {
-      config[task].forEach(t => {
+      config[task].forEach((t) => {
         _.watch(t.watchOn, () => gulp.start(task));
       });
     } else {

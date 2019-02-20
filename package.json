@@ -11,13 +11,10 @@
     "sanitize.css": "latest"
   },
   "devDependencies": {
-    "stylelint": "^9.9.0",
-    "stylelint-scss": "^3.4.3",
     "@notiv/postcss-property-lookup": "^2.0.4",
-    "autoprefixer": "^9.4.7",
+    "autoprefixer": "^9.4.8",
     "browser-sync": "^2.26.3",
     "css-mqpacker": "^7.0.0",
-    "gulp": "^3.9.1",
     "gulp-error-notifier": "^1.1.0",
     "gulp-if": "^2.0.2",
     "gulp-imagemin": "^5.0.3",
@@ -27,7 +24,9 @@
     "gulp-parcel": "^0.3.5",
     "gulp-postcss": "^8.0.0",
     "gulp-sass": "^4.0.2",
+    "gulp-sourcemaps": "^2.6.5",
     "gulp-svg-sprite": "^1.5.0",
+    "gulp": "^3.9.1",
     "gulp-watch": "^5.0.1",
     "imagemin-giflossy": "^5.1.10",
     "imagemin-mozjpeg": "^8.0.0",
@@ -39,10 +38,12 @@
     "postcss-scss": "^2.0.0",
     "postcss-selector-matches": "^4.0.0",
     "postcss-selector-not": "^4.0.0",
-    "postcss-simple-vars": "^5.0.1",
+    "postcss-simple-vars": "^5.0.2",
     "postcss-transition": "^1.0.0",
     "rmfr": "^2.0.0",
-    "sort-css-media-queries": "^1.4.3"
+    "sort-css-media-queries": "^1.4.3",
+    "stylelint": "^9.10.1",
+    "stylelint-scss": "^3.5.3"
   },
   "prettier": {
     "trailingComma": "es5",

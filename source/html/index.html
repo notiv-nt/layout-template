@@ -7,9 +7,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="">
 
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+
   <title>Template</title>
 
   <link rel="stylesheet" href="assets/css/index.css">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', {
+        scope: document.location.pathname
+      });
+    }
+  </script>
 
 </head>
 <body>

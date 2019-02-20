@@ -3,9 +3,9 @@
 @import 'variables';
 @import 'lib/*';
 
-@import 'util/*';
-
 @import 'base';
+
+@import 'util/*';
 
 @import 'components/*';
 @import 'sections/*';

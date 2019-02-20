@@ -21,6 +21,7 @@ module.exports = ({ root, dist }) => ({
     watchOn: p(root, 'source/js/**/*.js'),
     entry: [p(root, 'source/js/index.js')],
     dest: p(dist, 'assets/js'),
+    mapsPath: '/assets/js/',
   },
 
   img: {
