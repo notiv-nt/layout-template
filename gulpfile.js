@@ -1,4 +1,4 @@
-const PUBLIC_FOLDER = './dist';
+const PUBLIC_FOLDER = './public';
 // if true, then browser-sync will be used instead of livereload
 const LOCAL_DEV = true;
 let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
@@ -38,6 +38,7 @@ gulp.task('css', () => {
       lookupPattern: /@([a-z-]+)\b/g,
     }),
     require('postcss-inline-media'),
+    require('postcss-media-minmax'),
     require('postcss-simple-vars')({
       silent: true,
       keep: true,
@@ -107,16 +108,14 @@ gulp.task('css', () => {
 gulp.task('javascript', () => {
   gulp
     .src(config.javascript.entry, { read: false })
-    // .pipe(_.sourcemaps.init())
     .pipe(
       _.parcel({
         minify: PRODUCTION_MODE,
         production: PRODUCTION_MODE,
         outDir: config.javascript.dest,
-        publicURL: config.javascript.mapsPath,
+        publicURL: config.javascript.publicURL,
       })
     )
-    // .pipe(_.sourcemaps.write())
     .pipe(gulp.dest(config.javascript.dest));
 });
 
@@ -223,16 +222,12 @@ gulp.task('staticWatch', () => {
   }
 });
 
-gulp.task('staticWatch', () => {
-  if (LOCAL_DEV) {
-    browserSync.reload();
-  } else {
-    _.livereload.reload();
-  }
-});
-
 gulp.task('clean', () => {
-  rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
+  rmfr(path.resolve(process.cwd(), '.cache'));
+  // rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
+  rmfr(path.resolve(process.cwd(), 'sw.js'));
+  rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
+  rmfr(path.resolve(process.cwd(), 'assets'));
 });
 
 gulp.task('browser-sync', () => {

@@ -1,19 +1,16 @@
 :root {
-  --font-size: 1.4rem;
-  --line-height: 1.7;
-  --font-family: 'Open Sans', sans-serif;
+  --base-font-size: 1.4rem;
+  --base-font-family: 'Open Sans', sans-serif;
 
   --transition-duration: 250ms;
   --transition-delay: 0s;
   --transition-function: cubic-bezier(0.5, 0, 0.2, 1);
 
-  --text-color: #000;
-
-  --grid-gap: 2rem;
+  --base-gap: 3rem;
 }
 
 html {
-  font: 62.5% / var(--line-height) var(--font-family);
+  font: 400 62.5% / 1.7 var(--base-font-family);
   word-break: break-word;
   word-wrap: break-word;
 
@@ -25,9 +22,7 @@ html {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--text-color);
-  min-height: 100vh;
-  font-size: var(--font-size);
+  font-size: var(--base-font-size);
 }
 
 a {
@@ -36,7 +31,7 @@ a {
 }
 
 @if $isDevelopment {
-  body::after {
+  html::after {
     position: fixed;
     bottom: 0.5rem;
     right: 0.5rem;

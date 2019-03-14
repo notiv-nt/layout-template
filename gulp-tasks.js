@@ -11,8 +11,8 @@ module.exports = ({ root, dist }) => ({
 
   css: {
     watchOn: p(root, 'source/css/**/*.css'),
-    // entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
     entry: [p(root, 'source/css/index.css')],
+    // entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
     dest: p(dist, 'assets/css'),
     lintDest: p(root, 'source/css/'),
   },
@@ -21,7 +21,8 @@ module.exports = ({ root, dist }) => ({
     watchOn: p(root, 'source/js/**/*.js'),
     entry: [p(root, 'source/js/index.js')],
     dest: p(dist, 'assets/js'),
-    mapsPath: '/assets/js/',
+    // Relative to public folder, for source-maps
+    publicURL: '/assets/js',
   },
 
   img: {

@@ -87,4 +87,4 @@ typings/
 *.xd
 
 # Dist folders
-dist
+public

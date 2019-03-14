@@ -2,10 +2,9 @@
 
 @import 'variables';
 @import 'lib/*';
-
 @import 'base';
 
-@import 'util/*';
+@import 'util/**';
 
-@import 'components/*';
-@import 'sections/*';
+@import 'components/**';
+@import 'sections/**';

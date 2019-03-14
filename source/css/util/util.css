@@ -1,14 +1,10 @@
 .u {
   &-icon {
-    width: 1em;
-    height: @width;
-    fill: currentColor;
-
     display: inline-block;
     vertical-align: middle;
-  }
-
-  &-visually-hidden {
-    @include visually-hidden;
+    fill: var(--icon-color, currentColor);
+    color: @fill;
+    width: var(--icon-size, 1em);
+    height: @width;
   }
 }
