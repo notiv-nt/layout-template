@@ -4456,15 +4456,6 @@ gulp-match@^1.0.3:
   dependencies:
     minimatch "^3.0.3"
 
-gulp-parcel@^0.3.5:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/gulp-parcel/-/gulp-parcel-0.3.5.tgz#871b89563ce1230427a6681dd6bbc17b2d385b70"
-  integrity sha1-hxuJVjzhIwQnpmgd1rvBey04W3A=
-  dependencies:
-    parcel-bundler "^1.4.1"
-    plugin-error "^0.1.2"
-    through2 "^2.0.3"
-
 gulp-plumber@^1.0.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/gulp-plumber/-/gulp-plumber-1.2.1.tgz#d38700755a300b9d372318e4ffb5ff7ced0b2c84"
@@ -7375,7 +7366,7 @@ pako@~1.0.5:
   resolved "https://registry.yarnpkg.com/pako/-/pako-1.0.10.tgz#4328badb5086a426aa90f541977d4955da5c9732"
   integrity sha512-0DTvPVU3ed8+HNXOu5Bs+o//Mbdj9VNQMUOe9oKCwh8l0GNwpTDMKCWbRjgtD291AWnkAgkqA/LOnQS8AmS1tw==
 
-parcel-bundler@^1.4.1:
+parcel-bundler@^1.12.2:
   version "1.12.2"
   resolved "https://registry.yarnpkg.com/parcel-bundler/-/parcel-bundler-1.12.2.tgz#5736afcbeee80a488bb946fd53ba52d1c5786960"
   integrity sha512-jgT72i0za+EAgnxPBhXOKKlEQtTa4BfYdhe2jzulnT7785v/zHZMCI6qw3oD/Cju850OZcSubIE3U8Bt8Lzw9w==

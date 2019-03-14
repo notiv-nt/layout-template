@@ -14,7 +14,6 @@ module.exports = ({ root, dist }) => ({
     entry: [p(root, 'source/css/index.css')],
     // entry: [p(root, 'source/css/index.css'), p(root, 'source/css/first-screen.css')],
     dest: p(dist, 'assets/css'),
-    lintDest: p(root, 'source/css/'),
   },
 
   javascript: {

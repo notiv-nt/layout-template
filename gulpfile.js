@@ -1,8 +1,9 @@
 const PUBLIC_FOLDER = './public';
 // if true, then browser-sync will be used instead of livereload
-const LOCAL_DEV = true;
+const LOCAL_DEV = false;
 let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
 
+const ParcelBundler = require('parcel-bundler');
 const fs = require('fs');
 const errorNotifier = require('gulp-error-notifier');
 const path = require('path');
@@ -105,18 +106,40 @@ gulp.task('css', () => {
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
 });
 
-gulp.task('javascript', () => {
-  gulp
-    .src(config.javascript.entry, { read: false })
-    .pipe(
-      _.parcel({
-        minify: PRODUCTION_MODE,
-        production: PRODUCTION_MODE,
-        outDir: config.javascript.dest,
-        publicURL: config.javascript.publicURL,
-      })
-    )
-    .pipe(gulp.dest(config.javascript.dest));
+gulp.task('javascript', async () => {
+  const options = {
+    outDir: config.javascript.dest,
+    // publicUrl: './',
+    cache: false,
+    watch: false,
+    minify: PRODUCTION_MODE,
+    bundleNodeModules: false,
+    sourceMaps: !PRODUCTION_MODE,
+    detailedReport: true,
+  };
+
+  if (config.javascript.publicURL) {
+    options.publicUrl = config.javascript.publicURL;
+  }
+
+  try {
+    const bundler = new ParcelBundler(config.javascript.entry, options);
+    const bundle = await bundler.bundle();
+
+    if (LOCAL_DEV) {
+      browserSync.reload();
+    } else {
+      if (bundle.name) {
+        _.livereload.reload(bundle.name);
+      } else {
+        for (let b of bundle.childBundles) {
+          _.livereload.reload(b.name);
+        }
+      }
+    }
+  } catch (e) {
+    errorNotifier.notify(e);
+  }
 });
 
 gulp.task('img', () => {
@@ -223,11 +246,11 @@ gulp.task('staticWatch', () => {
 });
 
 gulp.task('clean', () => {
-  rmfr(path.resolve(process.cwd(), '.cache'));
-  // rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
-  rmfr(path.resolve(process.cwd(), 'sw.js'));
-  rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
-  rmfr(path.resolve(process.cwd(), 'assets'));
+  // rmfr(path.resolve(process.cwd(), '.cache'));
+  rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
+  // rmfr(path.resolve(process.cwd(), 'sw.js'));
+  // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
+  // rmfr(path.resolve(process.cwd(), 'assets'));
 });
 
 gulp.task('browser-sync', () => {
