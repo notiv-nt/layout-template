@@ -59,6 +59,8 @@ gulp.task('css', () => {
       timingFunction: 'var(--transition-function)',
     }),
 
+    require('postcss-fluid'),
+
     require('autoprefixer')({
       // Work with IE
       // grid: true,
