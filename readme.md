@@ -20,6 +20,7 @@
 - [postcss-selector-matches](https://github.com/postcss/postcss-selector-matches)
 - [postcss-selector-not](https://github.com/postcss/postcss-selector-not)
 - [postcss-transition](https://github.com/notiv-nt/postcss-transition)
+- [postcss-fluid](https://github.com/notiv-nt/postcss-fluid)
 - [autoprefixer](https://github.com/postcss/autoprefixer)
 - [css-mqpacker](https://github.com/hail2u/node-css-mqpacker)
 - [postcss-clean](https://github.com/leodido/postcss-clean)
