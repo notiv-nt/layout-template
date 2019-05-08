@@ -1,38 +1,38 @@
 const PUBLIC_FOLDER = './public';
 // if true, then browser-sync will be used instead of livereload
-const LOCAL_DEV = false;
+const LOCAL_DEV = true;
 let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
 
 const ParcelBundler = require('parcel-bundler');
-const fs = require('fs');
 const errorNotifier = require('gulp-error-notifier');
 const path = require('path');
 const gulp = require('gulp');
 const _ = require('gulp-load-plugins')();
 const browserSync = require('browser-sync').create();
-const rmfr = require('rmfr');
-const sortCSSmq = require('sort-css-media-queries');
 
-const config = require('./gulp-tasks.js')({
+const tasksConfig = require('./gulp-tasks.js')({
   root: process.cwd(),
   dist: path.resolve(process.cwd(), PUBLIC_FOLDER),
 });
 
-gulp.task('html', () => {
+// For js
+process.env.BUILD_VERSION = Date.now();
+
+module.html = (config) => {
   gulp
-    .src(config.html.entry)
+    .src(config.entry)
     .pipe(errorNotifier())
     .pipe(
       _.include({
-        includePaths: [config.html.root],
+        includePaths: [config.root],
         extensions: 'html',
       })
     )
-    .pipe(gulp.dest(config.html.dest))
+    .pipe(gulp.dest(config.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-});
+};
 
-gulp.task('css', () => {
+module.css = (config) => {
   const preSass = [
     require('postcss-easy-import')(),
     require('@notiv/postcss-property-lookup')({
@@ -68,7 +68,7 @@ gulp.task('css', () => {
     }),
 
     require('css-mqpacker')({
-      sort: sortCSSmq,
+      sort: require('sort-css-media-queries'),
     }),
   ];
 
@@ -87,7 +87,7 @@ gulp.task('css', () => {
   }
 
   gulp
-    .src(config.css.entry)
+    .src(config.entry)
     .pipe(errorNotifier())
 
     .pipe(
@@ -104,49 +104,78 @@ gulp.task('css', () => {
 
     .pipe(_.postcss(postSass))
 
-    .pipe(gulp.dest(config.css.dest))
+    .pipe(gulp.dest(config.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-});
+};
 
-gulp.task('javascript', async () => {
-  const options = {
-    outDir: config.javascript.dest,
-    // publicUrl: './',
-    cache: false,
-    watch: false,
-    minify: PRODUCTION_MODE,
-    bundleNodeModules: false,
-    sourceMaps: !PRODUCTION_MODE,
-    detailedReport: true,
-  };
+const javascriptQueue = [];
 
-  if (config.javascript.publicURL) {
-    options.publicUrl = config.javascript.publicURL;
-  }
+module.javascript = function(config) {
+  const fn = function() {
+    if (!config.config) {
+      config.config = {};
+    }
 
-  try {
-    const bundler = new ParcelBundler(config.javascript.entry, options);
-    const bundle = await bundler.bundle();
+    const bundler = new ParcelBundler(config.entry, {
+      outDir: config.dest,
+      // publicUrl: './',
+      cache: false,
+      watch: false,
+      minify: PRODUCTION_MODE,
+      bundleNodeModules: false,
+      sourceMaps: !PRODUCTION_MODE,
+      detailedReport: false,
 
-    if (LOCAL_DEV) {
-      browserSync.reload();
-    } else {
-      if (bundle.name) {
-        _.livereload.reload(bundle.name);
-      } else {
-        for (let b of bundle.childBundles) {
-          _.livereload.reload(b.name);
+      ...config.config,
+    });
+
+    const bundle = bundler.bundle();
+
+    bundle.then(() => {
+      if (LOCAL_DEV) {
+        browserSync.reload();
+      }
+
+      //
+      else {
+        if (bundle.name) {
+          _.livereload.reload(bundle.name);
+        }
+
+        //
+        else {
+          for (let b of bundle.childBundles) {
+            _.livereload.reload(b.name);
+          }
         }
       }
-    }
-  } catch (e) {
-    errorNotifier.notify(e);
-  }
-});
+    });
 
-gulp.task('img', () => {
+    bundle.catch(errorNotifier.notify);
+
+    bundle.finally(() => {
+      const index = javascriptQueue.indexOf(this);
+
+      if (index > -1) {
+        javascriptQueue.splice(index, 1);
+      }
+
+      if (javascriptQueue.length) {
+        setTimeout(() => javascriptQueue[0].fn());
+      }
+    });
+  };
+
+  javascriptQueue.push({ fn });
+
+  if (javascriptQueue.length === 1) {
+    javascriptQueue[0].fn();
+  }
+};
+
+module.img = (config) => {
   gulp
-    .src(config.img.watchOn)
+    .src(config.watchOn)
     .pipe(
       _.imagemin([
         // PNG
@@ -193,69 +222,51 @@ gulp.task('img', () => {
         }),
       ])
     )
-    .pipe(gulp.dest(config.img.dest))
+    .pipe(gulp.dest(config.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-});
+};
 
-gulp.task('static', () => {
+module.static = (config) => {
   gulp
-    .src(config.static.watchOn)
-    .pipe(gulp.dest(config.static.dest))
+    .src(config.watchOn)
+    .pipe(gulp.dest(config.dest))
     .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-});
+};
 
-gulp.task('icons', () => {
-  const tasks = config.icons.map((task) => {
-    gulp
-      .src(task.watchOn)
-      .pipe(errorNotifier())
-      .pipe(
-        _.svgSprite({
-          shape: {
-            id: {
-              generator: task.iconId,
-              separator: '-',
-              whitespace: '-',
-            },
+module.icons = (config) => {
+  gulp
+    .src(config.watchOn)
+    .pipe(errorNotifier())
+    .pipe(
+      _.svgSprite({
+        shape: {
+          id: {
+            generator: config.iconId,
+            separator: '-',
+            whitespace: '-',
           },
-          mode: {
-            symbol: {
-              dest: '.',
-              sprite: task.fileName,
-              // example: true,
-            },
+        },
+        mode: {
+          symbol: {
+            dest: '.',
+            sprite: config.fileName,
+            // example: true,
           },
-          svg: {
-            xmlDeclaration: false,
-            doctypeDeclaration: false,
-            namespaceIDs: false,
-            namespaceClassnames: false,
-            precision: 2,
-          },
-        })
-      )
-      .pipe(gulp.dest(task.dest))
-      .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
-  });
-});
+        },
+        svg: {
+          xmlDeclaration: false,
+          doctypeDeclaration: false,
+          namespaceIDs: false,
+          namespaceClassnames: false,
+          precision: 2,
+        },
+      })
+    )
+    .pipe(gulp.dest(config.dest))
+    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+};
 
-gulp.task('staticWatch', () => {
-  if (LOCAL_DEV) {
-    browserSync.reload();
-  } else {
-    _.livereload.reload();
-  }
-});
-
-gulp.task('clean', () => {
-  // rmfr(path.resolve(process.cwd(), '.cache'));
-  rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
-  // rmfr(path.resolve(process.cwd(), 'sw.js'));
-  // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
-  // rmfr(path.resolve(process.cwd(), 'assets'));
-});
-
-gulp.task('browser-sync', () => {
+module.browserSync = () => {
   browserSync.init({
     server: {
       baseDir: PUBLIC_FOLDER,
@@ -263,33 +274,51 @@ gulp.task('browser-sync', () => {
     port: 3030,
     open: false,
   });
-});
+};
 
-gulp.task('livereload', () => {
+module.livereload = () => {
   _.livereload.listen();
+};
+
+gulp.task('clean', () => {
+  const rmfr = require('rmfr');
+
+  // rmfr(path.resolve(process.cwd(), '.cache'));
+  rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
+  // rmfr(path.resolve(process.cwd(), 'sw.js'));
+  // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
+  // rmfr(path.resolve(process.cwd(), 'assets'));
 });
 
 gulp.task('build', () => {
-  for (let task in config) {
-    gulp.start(task);
+  for (let task in tasksConfig) {
+    if (Array.isArray(tasksConfig[task])) {
+      tasksConfig[task].forEach((t) => module[task](t));
+    }
+
+    //
+    else {
+      module[task](tasksConfig[task]);
+    }
   }
 });
 
 gulp.task('watch', () => {
-  for (let task in config) {
-    if (Array.isArray(config[task])) {
-      config[task].forEach((t) => {
-        _.watch(t.watchOn, () => gulp.start(task));
-      });
-    } else {
-      _.watch(config[task].watchOn, () => gulp.start(task));
+  for (let task in tasksConfig) {
+    if (Array.isArray(tasksConfig[task])) {
+      tasksConfig[task].forEach((t) => _.watch(t.watchOn, () => module[task](t)));
+    }
+
+    //
+    else {
+      _.watch(tasksConfig[task].watchOn, () => module[task](tasksConfig[task]));
     }
   }
 
   if (LOCAL_DEV) {
-    gulp.start('browser-sync');
+    module.browserSync();
   } else {
-    gulp.start('livereload');
+    module.livereload();
   }
 
   gulp.start('build');

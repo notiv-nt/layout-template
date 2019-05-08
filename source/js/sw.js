@@ -1,4 +1,4 @@
-const CACHE_VERSION = 1;
+const CACHE_VERSION = process.env.BUILD_VERSION;
 const CURRENT_CACHES = {
   fontFile: `font-file-v${CACHE_VERSION}`,
   fontCss: `font-css-v${CACHE_VERSION}`,

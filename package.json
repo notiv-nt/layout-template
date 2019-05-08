@@ -6,10 +6,13 @@
     "clean": "gulp clean"
   },
   "dependencies": {
-    "postcss-fluid": "^1.0.0",
     "sanitize.css": "latest"
   },
   "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "@notiv/postcss-property-lookup": "^2.0.4",
     "autoprefixer": "^9.5.1",
     "browser-sync": "^2.26.3",
@@ -32,6 +35,7 @@
     "parcel-bundler": "^1.12.3",
     "postcss-clean": "^1.1.0",
     "postcss-easy-import": "^3.0.0",
+    "postcss-fluid": "^1.0.0",
     "postcss-inline-media": "^1.3.0",
     "postcss-media-minmax": "^4.0.0",
     "postcss-scss": "^2.0.0",
