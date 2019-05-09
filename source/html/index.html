@@ -12,11 +12,11 @@
 
   <title>Template</title>
 
-  <link rel="stylesheet" href="assets/css/index.css">
+  <link rel="stylesheet" href="assets/css/index{% HASH %}.css">
 
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js', {
+      navigator.serviceWorker.register('/sw{% HASH %}.js', {
         scope: document.location.pathname
       });
     }
@@ -27,9 +27,21 @@
 </head>
 <body>
 
-  <!--=include sections/header.html -->
+  {%> sections/header.html %}
+
+  <!--= include sections/header.html -->
 
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+
+  <script>
+    var JS_PATH = '/assets/js';
+    var JS_FILES = [
+      'index{% HASH %}.js',
+    ];
+  </script>
+
+  <script>JS_FILES.map(o=>{import(`${JS_PATH}/${o}`)}),window.supportsDynamicImport=!0</script>
+  <script>if(!window.supportsDynamicImport){const n=document.createElement("script");n.src="https://unpkg.com/systemjs@2.0.0/dist/s.min.js",n.addEventListener("load",function(){JS_FILES.map(function(n){System.import(JS_PATH+"/_/"+n)})}),document.head.appendChild(n)}</script>
 
 </body>
 </html>

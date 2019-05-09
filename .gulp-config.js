@@ -5,7 +5,7 @@ const USE_HASH = true;
 module.exports = () => ({
   dest: DEST,
 
-  // null livereload browsersync
+  // null, livereload, browsersync
   devServer: 'browsersync',
   useHash: USE_HASH,
 
@@ -26,12 +26,10 @@ module.exports = () => ({
     javascript: [
       {
         watchOn: ['!source/js/sw.js', 'source/js/**/*.js'],
-        entry: 'source/js/index.js',
+        entry: ['source/js/index.js'],
         dest: `${DEST}/assets/js`,
-        // Relative to public folder, for source-maps
-        config: {
-          publicUrl: '/assets/js',
-          outFile: USE_HASH ? `index${process.env.BUILD_VERSION}.js` : 'index.js',
+        params: {
+          useHash: USE_HASH,
         },
       },
 
@@ -39,8 +37,29 @@ module.exports = () => ({
         watchOn: 'source/js/sw.js',
         entry: 'source/js/sw.js',
         dest: DEST,
-        use: 'rollup',
+        params: {
+          useFallback: false,
+          useHash: USE_HASH,
+        },
       },
+
+      // {
+      //   watchOn: ['!source/js/sw.js', 'source/js/**/*.js'],
+      //   entry: 'source/js/index.js',
+      //   dest: `${DEST}/assets/js`,
+      //   // Relative to public folder, for source-maps
+      //   config: {
+      //     publicUrl: '/assets/js',
+      //     outFile: USE_HASH ? `index${process.env.BUILD_VERSION}.js` : 'index.js',
+      //   },
+      // },
+
+      // {
+      //   watchOn: 'source/js/sw.js',
+      //   entry: 'source/js/sw.js',
+      //   dest: DEST,
+      //   use: 'rollup',
+      // },
     ],
 
     img: {

@@ -13,7 +13,7 @@ if (args._.includes('build')) {
   process.env.NODE_ENV = 'production';
 }
 
-process.env.BUILD_VERSION = nanoid(10);
+process.env.BUILD_VERSION = `_${nanoid(14)}_`;
 
 if (!args.root) {
   args.root = __dirname;
@@ -142,99 +142,85 @@ module.css = (config) => {
     .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
-const javascriptQueue = [];
-
-module.javascript = function(config) {
-  if (!config.config) {
-    config.config = {};
+module.javascript = async (config) => {
+  if (!config.params) {
+    config.params = {};
   }
 
-  const parcelFn = function() {
-    const bundler = new ParcelBundler(PP(config.entry), {
-      outDir: PP(config.dest),
-      // publicUrl: './',
-      cache: false,
-      watch: false,
-      minify: args.minify || process.env.NODE_ENV === 'production',
-      bundleNodeModules: false,
-      sourceMaps: !args.minify,
-      detailedReport: false,
-      production: process.env.NODE_ENV === 'production',
+  const rollup = require('rollup');
+  const replace = require('rollup-plugin-replace');
+  const postcss = require('rollup-plugin-postcss');
+  const resolve = require('rollup-plugin-node-resolve');
+  const babel = require('rollup-plugin-babel');
+  const { terser } = require('rollup-plugin-terser');
+  const commonjs = require('rollup-plugin-commonjs');
 
-      ...config.config,
-    });
+  const commonPlugins = [
+    replace({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'process.env.BUILD_VERSION': JSON.stringify(process.env.BUILD_VERSION),
+      'process.env.HASH': JSON.stringify(process.env.HASH),
+    }),
 
-    const bundle = bundler.bundle();
+    resolve({
+      browser: true,
+    }),
 
-    bundle.then(() => {
-      if (tasksConfig.devServer === 'browsersync') {
-        browserSync.reload();
-      }
+    commonjs(),
 
-      //
-      else if (tasksConfig.devServer === 'livereload') {
-        if (bundle.name) {
-          _.livereload.reload(bundle.name);
-        }
+    postcss(),
+    // terser(),
+  ];
 
-        //
-        else {
-          for (let b of bundle.childBundles) {
-            _.livereload.reload(b.name);
-          }
-        }
-      }
-    });
-
-    bundle.catch(errorNotifier.notify);
-
-    bundle.finally(() => {
-      if (javascriptQueue.indexOf(this) > -1) {
-        javascriptQueue.splice(javascriptQueue.indexOf(this), 1);
-      }
-
-      if (javascriptQueue.length) {
-        setTimeout(() => javascriptQueue[0].fn());
-      }
-    });
-  };
-
-  const rollupFn = async function() {
-    const rollup = require('rollup');
-    const replace = require('rollup-plugin-replace');
-
-    const options = {
-      input: PP(config.entry),
-      output: {
-        dir: PP(config.dest),
-        format: 'esm',
-      },
-      plugins: [
-        replace({
-          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-          'process.env.BUILD_VERSION': JSON.stringify(process.env.BUILD_VERSION),
-          'process.env.HASH': JSON.stringify(process.env.HASH),
-        }),
-      ],
-    };
-
+  const bundle = async (options) => {
     const bundle = await rollup.rollup(options);
 
     await bundle.generate(options);
     await bundle.write(options);
   };
 
-  if (!config.use || config.use === 'parcel') {
-    javascriptQueue.push({ fn: parcelFn });
+  // Moden
+  bundle({
+    input: PP(config.entry),
+    output: {
+      dir: PP(config.dest),
+      entryFileNames: config.params.useHash ? `[name]${process.env.HASH}.js` : `[name].js`,
+      sourcemap: true,
+      format: 'es',
+    },
+    plugins: [...commonPlugins],
+  });
 
-    if (javascriptQueue.length === 1) {
-      javascriptQueue[0].fn();
-    }
-  }
+  // Fallback
+  if (typeof config.params.useFallback === 'undefined' || config.params.useFallback) {
+    bundle({
+      input: PP(config.entry),
+      output: {
+        dir: path.resolve(PP(config.dest), '_'),
+        entryFileNames: config.params.useHash ? `[name]${process.env.HASH}.js` : `[name].js`,
+        sourcemap: true,
+        format: 'system',
+      },
+      plugins: [
+        babel({
+          exclude: 'node_modules/**',
+          presets: [
+            [
+              '@babel/env',
+              {
+                useBuiltIns: 'usage',
+                corejs: '2',
+                modules: false,
+                targets: '> 0.25%, not dead, ie 11',
+              },
+            ],
+          ],
+          plugins: ['@babel/plugin-syntax-dynamic-import'],
+        }),
 
-  //
-  else {
-    config.use === 'rollup' && rollupFn();
+        ...commonPlugins,
+      ],
+    });
   }
 };
 

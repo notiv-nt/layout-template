@@ -9,13 +9,12 @@
   "bin": {
     "ntgb": "./cli.js"
   },
-  "dependencies": {
-    "sanitize.css": "latest"
-  },
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.4",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@notiv/postcss-property-lookup": "^2.0.4",
     "autoprefixer": "^9.5.1",
@@ -41,7 +40,6 @@
     "imagemin-zopfli": "^6.0.0",
     "minimist": "^1.2.0",
     "nanoid": "^2.0.1",
-    "parcel-bundler": "^1.12.3",
     "postcss-clean": "^1.1.0",
     "postcss-easy-import": "^3.0.0",
     "postcss-fluid": "^1.0.0",
@@ -54,7 +52,12 @@
     "postcss-transition": "^1.0.0",
     "rmfr": "^2.0.0",
     "rollup": "^1.11.3",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.3.4",
+    "rollup-plugin-node-resolve": "^4.2.3",
+    "rollup-plugin-postcss": "^2.0.3",
     "rollup-plugin-replace": "^2.2.0",
+    "rollup-plugin-terser": "^4.0.4",
     "sort-css-media-queries": "^1.4.3"
   },
   "prettier": {

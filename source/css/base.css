@@ -6,11 +6,11 @@
   --transition-delay: 0s;
   --transition-function: cubic-bezier(0.5, 0, 0.2, 1);
 
-  --base-gap: 3rem;
+  --base-gap: 2rem;
 }
 
 html {
-  font: 400 62.5% / 1.7 var(--base-font-family);
+  font: 400 62.5% / 1.5 var(--base-font-family);
   word-break: break-word;
   word-wrap: break-word;
 
