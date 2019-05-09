@@ -1,35 +1,67 @@
-const PUBLIC_FOLDER = './public';
-// if true, then browser-sync will be used instead of livereload
-const LOCAL_DEV = true;
-let PRODUCTION_MODE = process.argv.indexOf('--minify') !== -1;
-
-const ParcelBundler = require('parcel-bundler');
-const errorNotifier = require('gulp-error-notifier');
-const path = require('path');
 const gulp = require('gulp');
+const path = require('path');
+const fs = require('fs');
+const args = require('minimist')(process.argv);
 const _ = require('gulp-load-plugins')();
+const errorNotifier = require('gulp-error-notifier');
+const ParcelBundler = require('parcel-bundler');
 const browserSync = require('browser-sync').create();
+const nanoid = require('nanoid');
 
-const tasksConfig = require('./gulp-tasks.js')({
-  root: process.cwd(),
-  dist: path.resolve(process.cwd(), PUBLIC_FOLDER),
-});
+// ------------
+if (args._.includes('build')) {
+  process.env.NODE_ENV = 'production';
+}
 
-// For js
-process.env.BUILD_VERSION = Date.now();
+process.env.BUILD_VERSION = nanoid(10);
 
+if (!args.root) {
+  args.root = __dirname;
+}
+
+const PP = (p, params = {}) => {
+  const parse = (p) => {
+    let $path = p;
+
+    if (p.charAt(0) === '!') {
+      $path = '!' + path.resolve(args.root, p.substr(1));
+    } else {
+      $path = path.resolve(args.root, p);
+    }
+
+    return $path;
+  };
+
+  if (Array.isArray(p)) {
+    return p.map(parse);
+  }
+
+  return parse(p);
+};
+
+// ------------
+const tasksConfig = (() => {
+  let configPath = path.resolve(args.root, './.gulp-config.js');
+
+  return require(fs.existsSync(configPath) ? configPath : path.resolve(__dirname, './.gulp-config.js'));
+})()();
+process.env.HASH = tasksConfig.useHash ? process.env.BUILD_VERSION : '';
+
+// ------------
 module.html = (config) => {
   gulp
-    .src(config.entry)
+    .src(PP(config.entry))
     .pipe(errorNotifier())
     .pipe(
       _.include({
-        includePaths: [config.root],
+        includePaths: [PP(config.root)],
         extensions: 'html',
       })
     )
-    .pipe(gulp.dest(config.dest))
-    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+    .pipe(_.mustache({ ...process.env }, { tags: ['{%', '%}'] }))
+    .pipe(gulp.dest(PP(config.dest)))
+    .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
+    .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
 module.css = (config) => {
@@ -44,7 +76,7 @@ module.css = (config) => {
       silent: true,
       keep: true,
       variables: {
-        isDevelopment: !PRODUCTION_MODE,
+        isDevelopment: !args.minify,
       },
     }),
   ];
@@ -72,7 +104,7 @@ module.css = (config) => {
     }),
   ];
 
-  if (PRODUCTION_MODE) {
+  if (args.minify) {
     postSass.splice(
       postSass.length - 1,
       0,
@@ -87,7 +119,7 @@ module.css = (config) => {
   }
 
   gulp
-    .src(config.entry)
+    .src(PP(config.entry))
     .pipe(errorNotifier())
 
     .pipe(
@@ -103,28 +135,31 @@ module.css = (config) => {
     )
 
     .pipe(_.postcss(postSass))
+    .pipe(_.if(tasksConfig.useHash, _.rename({ suffix: process.env.BUILD_VERSION })))
 
-    .pipe(gulp.dest(config.dest))
-    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+    .pipe(gulp.dest(PP(config.dest)))
+    .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
+    .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
 const javascriptQueue = [];
 
 module.javascript = function(config) {
-  const fn = function() {
-    if (!config.config) {
-      config.config = {};
-    }
+  if (!config.config) {
+    config.config = {};
+  }
 
-    const bundler = new ParcelBundler(config.entry, {
-      outDir: config.dest,
+  const parcelFn = function() {
+    const bundler = new ParcelBundler(PP(config.entry), {
+      outDir: PP(config.dest),
       // publicUrl: './',
       cache: false,
       watch: false,
-      minify: PRODUCTION_MODE,
+      minify: args.minify || process.env.NODE_ENV === 'production',
       bundleNodeModules: false,
-      sourceMaps: !PRODUCTION_MODE,
+      sourceMaps: !args.minify,
       detailedReport: false,
+      production: process.env.NODE_ENV === 'production',
 
       ...config.config,
     });
@@ -132,12 +167,12 @@ module.javascript = function(config) {
     const bundle = bundler.bundle();
 
     bundle.then(() => {
-      if (LOCAL_DEV) {
+      if (tasksConfig.devServer === 'browsersync') {
         browserSync.reload();
       }
 
       //
-      else {
+      else if (tasksConfig.devServer === 'livereload') {
         if (bundle.name) {
           _.livereload.reload(bundle.name);
         }
@@ -154,10 +189,8 @@ module.javascript = function(config) {
     bundle.catch(errorNotifier.notify);
 
     bundle.finally(() => {
-      const index = javascriptQueue.indexOf(this);
-
-      if (index > -1) {
-        javascriptQueue.splice(index, 1);
+      if (javascriptQueue.indexOf(this) > -1) {
+        javascriptQueue.splice(javascriptQueue.indexOf(this), 1);
       }
 
       if (javascriptQueue.length) {
@@ -166,16 +199,48 @@ module.javascript = function(config) {
     });
   };
 
-  javascriptQueue.push({ fn });
+  const rollupFn = async function() {
+    const rollup = require('rollup');
+    const replace = require('rollup-plugin-replace');
 
-  if (javascriptQueue.length === 1) {
-    javascriptQueue[0].fn();
+    const options = {
+      input: PP(config.entry),
+      output: {
+        dir: PP(config.dest),
+        format: 'esm',
+      },
+      plugins: [
+        replace({
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          'process.env.BUILD_VERSION': JSON.stringify(process.env.BUILD_VERSION),
+          'process.env.HASH': JSON.stringify(process.env.HASH),
+        }),
+      ],
+    };
+
+    const bundle = await rollup.rollup(options);
+
+    await bundle.generate(options);
+    await bundle.write(options);
+  };
+
+  if (!config.use || config.use === 'parcel') {
+    javascriptQueue.push({ fn: parcelFn });
+
+    if (javascriptQueue.length === 1) {
+      javascriptQueue[0].fn();
+    }
+  }
+
+  //
+  else {
+    config.use === 'rollup' && rollupFn();
   }
 };
 
 module.img = (config) => {
   gulp
-    .src(config.watchOn)
+    .src(PP(config.watchOn))
     .pipe(
       _.imagemin([
         // PNG
@@ -222,20 +287,22 @@ module.img = (config) => {
         }),
       ])
     )
-    .pipe(gulp.dest(config.dest))
-    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+    .pipe(gulp.dest(PP(config.dest)))
+    .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
+    .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
 module.static = (config) => {
   gulp
-    .src(config.watchOn)
-    .pipe(gulp.dest(config.dest))
-    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+    .src(PP(config.watchOn))
+    .pipe(gulp.dest(PP(config.dest)))
+    .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
+    .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
 module.icons = (config) => {
   gulp
-    .src(config.watchOn)
+    .src(PP(config.watchOn))
     .pipe(errorNotifier())
     .pipe(
       _.svgSprite({
@@ -262,17 +329,18 @@ module.icons = (config) => {
         },
       })
     )
-    .pipe(gulp.dest(config.dest))
-    .pipe(_.if(LOCAL_DEV, browserSync.stream(), _.livereload()));
+    .pipe(gulp.dest(PP(config.dest)))
+    .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
+    .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
 };
 
 module.browserSync = () => {
   browserSync.init({
     server: {
-      baseDir: PUBLIC_FOLDER,
+      baseDir: PP(tasksConfig.dest),
     },
     port: 3030,
-    open: false,
+    open: true,
   });
 };
 
@@ -284,40 +352,44 @@ gulp.task('clean', () => {
   const rmfr = require('rmfr');
 
   // rmfr(path.resolve(process.cwd(), '.cache'));
-  rmfr(path.resolve(process.cwd(), PUBLIC_FOLDER));
+  console.log('Remove', PP(tasksConfig.dest));
+
+  rmfr(PP(tasksConfig.dest));
   // rmfr(path.resolve(process.cwd(), 'sw.js'));
   // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
   // rmfr(path.resolve(process.cwd(), 'assets'));
 });
 
 gulp.task('build', () => {
-  for (let task in tasksConfig) {
-    if (Array.isArray(tasksConfig[task])) {
-      tasksConfig[task].forEach((t) => module[task](t));
+  for (let task in tasksConfig.tasks) {
+    if (Array.isArray(tasksConfig.tasks[task])) {
+      tasksConfig.tasks[task].forEach((t) => module[task](t));
     }
 
     //
     else {
-      module[task](tasksConfig[task]);
+      module[task](tasksConfig.tasks[task]);
     }
   }
 });
 
 gulp.task('watch', () => {
-  for (let task in tasksConfig) {
-    if (Array.isArray(tasksConfig[task])) {
-      tasksConfig[task].forEach((t) => _.watch(t.watchOn, () => module[task](t)));
+  for (let task in tasksConfig.tasks) {
+    if (Array.isArray(tasksConfig.tasks[task])) {
+      tasksConfig.tasks[task].forEach((t) => {
+        _.watch(PP(t.watchOn), () => module[task](t));
+      });
     }
 
     //
     else {
-      _.watch(tasksConfig[task].watchOn, () => module[task](tasksConfig[task]));
+      _.watch(PP(tasksConfig.tasks[task].watchOn), () => module[task](tasksConfig.tasks[task]));
     }
   }
 
-  if (LOCAL_DEV) {
+  if (tasksConfig.devServer === 'browsersync') {
     module.browserSync();
-  } else {
+  } else if (tasksConfig.devServer === 'livereload') {
     module.livereload();
   }
 
