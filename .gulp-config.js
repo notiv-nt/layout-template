@@ -5,7 +5,7 @@ module.exports = () => ({
 
   // null, 'livereload', 'browsersync'
   devServer: 'browsersync',
-  browserlist: '> 1%',
+  browserlist: '> 1%, ie 11',
 
   tasks: {
     html: {

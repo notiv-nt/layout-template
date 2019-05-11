@@ -189,7 +189,7 @@ module.javascript = async (config) => {
     await bundle.write(options);
   };
 
-  const entryFileNames = LOCALS.hash ? `[name]${LOCALS.hash}.js` : '[name].js';
+  const entryFileNames = LOCALS.HASH ? `[name]${LOCALS.HASH}.js` : '[name].js';
 
   // Moden
   bundle({

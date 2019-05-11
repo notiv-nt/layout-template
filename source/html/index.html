@@ -22,8 +22,6 @@
     }
   </script>
 
-  <script src="assets/js/index.js" defer></script>
-
 </head>
 <body>
 
@@ -41,7 +39,13 @@
   </script>
 
   <script>JS_FILES.map(o=>{import(`${JS_PATH}/${o}`)}),window.supportsDynamicImport=!0</script>
-  <script>if(!window.supportsDynamicImport){const n=document.createElement("script");n.src="https://unpkg.com/systemjs@2.0.0/dist/s.min.js",n.addEventListener("load",function(){JS_FILES.map(function(n){System.import(JS_PATH+"/_/"+n)})}),document.head.appendChild(n)}</script>
+  <script>
+    !function(t){if(!window.supportsDynamicImport)for(var n=0;n<t.length;n++){var e=document.createElement("script");e.src=t[n],document.head.appendChild(e)}}([
+        'https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js',
+        'https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js'
+      ])
+  </script>
+  <script>if(!window.supportsDynamicImport){var t=document.createElement("script");t.src="https://unpkg.com/systemjs@2.0.0/dist/s.min.js",t.addEventListener("load",function(){JS_FILES.map(function(t){System.import(JS_PATH+"/_/"+t)})}),document.head.appendChild(t)}</script>
 
 </body>
 </html>
