@@ -248,8 +248,7 @@ module.img = (config) => {
 
         require('imagemin-zopfli')({
           more: true,
-          // TODO: minify
-          // iterations: 50 // very slow but more effective, default 15
+          iterations: LOCALS.minify ? 50 : 15,
         }),
 
         // gif
