@@ -4,29 +4,32 @@ const fs = require('fs');
 const args = require('minimist')(process.argv);
 const _ = require('gulp-load-plugins')();
 const errorNotifier = require('gulp-error-notifier');
-const ParcelBundler = require('parcel-bundler');
 const browserSync = require('browser-sync').create();
 const nanoid = require('nanoid');
 
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development';
+}
+
+const LOCALS = {
+  MINIFY: null,
+  NODE_ENV: process.env.NODE_ENV,
+  ENV: process.env.NODE_ENV,
+  ROOT: args.root || __dirname,
+  BUILD_VERSION: `_${nanoid(14)}_`,
+  HASH: '',
+};
+
+//
 // ------------
-if (args._.includes('build')) {
-  process.env.NODE_ENV = 'production';
-}
-
-process.env.BUILD_VERSION = `_${nanoid(14)}_`;
-
-if (!args.root) {
-  args.root = __dirname;
-}
-
 const PP = (p, params = {}) => {
   const parse = (p) => {
     let $path = p;
 
     if (p.charAt(0) === '!') {
-      $path = '!' + path.resolve(args.root, p.substr(1));
+      $path = '!' + path.resolve(LOCALS.ROOT, p.substr(1));
     } else {
-      $path = path.resolve(args.root, p);
+      $path = path.resolve(LOCALS.ROOT, p);
     }
 
     return $path;
@@ -39,14 +42,15 @@ const PP = (p, params = {}) => {
   return parse(p);
 };
 
+//
 // ------------
 const tasksConfig = (() => {
-  let configPath = path.resolve(args.root, './.gulp-config.js');
+  let configPath = path.resolve(LOCALS.ROOT, './.gulp-config.js');
 
   return require(fs.existsSync(configPath) ? configPath : path.resolve(__dirname, './.gulp-config.js'));
 })()();
-process.env.HASH = tasksConfig.useHash ? process.env.BUILD_VERSION : '';
 
+//
 // ------------
 module.html = (config) => {
   gulp
@@ -54,11 +58,15 @@ module.html = (config) => {
     .pipe(errorNotifier())
     .pipe(
       _.include({
-        includePaths: [PP(config.root)],
-        extensions: 'html',
+        includePaths: [PP(config.params.root)],
+        extensions: config.params.extensions || 'html',
       })
     )
-    .pipe(_.mustache({ ...process.env }, { tags: ['{%', '%}'] }))
+    .pipe(
+      _.mustache(LOCALS, {
+        tags: config.params.tags || ['{%', '%}'],
+      })
+    )
     .pipe(gulp.dest(PP(config.dest)))
     .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
     .pipe(_.if(tasksConfig.devServer === 'livereload', _.livereload(), null));
@@ -76,7 +84,7 @@ module.css = (config) => {
       silent: true,
       keep: true,
       variables: {
-        isDevelopment: !args.minify,
+        isDevelopment: LOCALS.ENV === 'development',
       },
     }),
   ];
@@ -96,7 +104,7 @@ module.css = (config) => {
     require('autoprefixer')({
       // Work with IE
       // grid: true,
-      browsers: ['> 0.5%'],
+      browsers: tasksConfig.browserlist,
     }),
 
     require('css-mqpacker')({
@@ -104,7 +112,7 @@ module.css = (config) => {
     }),
   ];
 
-  if (args.minify) {
+  if (LOCALS.MINIFY) {
     postSass.splice(
       postSass.length - 1,
       0,
@@ -135,7 +143,7 @@ module.css = (config) => {
     )
 
     .pipe(_.postcss(postSass))
-    .pipe(_.if(tasksConfig.useHash, _.rename({ suffix: process.env.BUILD_VERSION })))
+    .pipe(_.if(!!LOCALS.HASH, _.rename({ suffix: LOCALS.HASH })))
 
     .pipe(gulp.dest(PP(config.dest)))
     .pipe(_.if(tasksConfig.devServer === 'browsersync', browserSync.stream(), null))
@@ -157,9 +165,9 @@ module.javascript = async (config) => {
 
   const commonPlugins = [
     replace({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      'process.env.BUILD_VERSION': JSON.stringify(process.env.BUILD_VERSION),
-      'process.env.HASH': JSON.stringify(process.env.HASH),
+      'process.env.NODE_ENV': JSON.stringify(LOCALS.NODE_ENV),
+      'process.env.BUILD_VERSION': JSON.stringify(LOCALS.BUILD_VERSION),
+      'process.env.HASH': JSON.stringify(LOCALS.HASH),
     }),
 
     resolve({
@@ -167,10 +175,12 @@ module.javascript = async (config) => {
     }),
 
     commonjs(),
-
     postcss(),
-    // terser(),
   ];
+
+  if (LOCALS.MINIFY) {
+    commonPlugins.push(terser());
+  }
 
   const bundle = async (options) => {
     const bundle = await rollup.rollup(options);
@@ -179,13 +189,15 @@ module.javascript = async (config) => {
     await bundle.write(options);
   };
 
+  const entryFileNames = LOCALS.hash ? `[name]${LOCALS.hash}.js` : '[name].js';
+
   // Moden
   bundle({
     input: PP(config.entry),
     output: {
       dir: PP(config.dest),
-      entryFileNames: config.params.useHash ? `[name]${process.env.HASH}.js` : `[name].js`,
-      sourcemap: true,
+      entryFileNames,
+      sourcemap: !LOCALS.MINIFY,
       format: 'es',
     },
     plugins: [...commonPlugins],
@@ -197,8 +209,8 @@ module.javascript = async (config) => {
       input: PP(config.entry),
       output: {
         dir: path.resolve(PP(config.dest), '_'),
-        entryFileNames: config.params.useHash ? `[name]${process.env.HASH}.js` : `[name].js`,
-        sourcemap: true,
+        entryFileNames,
+        sourcemap: !LOCALS.MINIFY,
         format: 'system',
       },
       plugins: [
@@ -211,7 +223,7 @@ module.javascript = async (config) => {
                 useBuiltIns: 'usage',
                 corejs: '2',
                 modules: false,
-                targets: '> 0.25%, not dead, ie 11',
+                targets: tasksConfig.browserlist,
               },
             ],
           ],
@@ -231,13 +243,13 @@ module.img = (config) => {
       _.imagemin([
         // PNG
         require('imagemin-pngquant')({
-          speed: 1,
-          quality: 90,
+          quality: [0.7, 0.9],
         }),
 
         require('imagemin-zopfli')({
           more: true,
-          // iterations: 50 // very slow but more effective
+          // TODO: minify
+          // iterations: 50 // very slow but more effective, default 15
         }),
 
         // gif
@@ -334,19 +346,7 @@ module.livereload = () => {
   _.livereload.listen();
 };
 
-gulp.task('clean', () => {
-  const rmfr = require('rmfr');
-
-  // rmfr(path.resolve(process.cwd(), '.cache'));
-  console.log('Remove', PP(tasksConfig.dest));
-
-  rmfr(PP(tasksConfig.dest));
-  // rmfr(path.resolve(process.cwd(), 'sw.js'));
-  // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
-  // rmfr(path.resolve(process.cwd(), 'assets'));
-});
-
-gulp.task('build', () => {
+module.build = () => {
   for (let task in tasksConfig.tasks) {
     if (Array.isArray(tasksConfig.tasks[task])) {
       tasksConfig.tasks[task].forEach((t) => module[task](t));
@@ -357,6 +357,18 @@ gulp.task('build', () => {
       module[task](tasksConfig.tasks[task]);
     }
   }
+};
+
+gulp.task('clean', () => {
+  const rmfr = require('rmfr');
+
+  // rmfr(path.resolve(process.cwd(), '.cache'));
+  console.log('Remove', PP(tasksConfig.dest));
+
+  rmfr(PP(tasksConfig.dest));
+  // rmfr(path.resolve(process.cwd(), 'sw.js'));
+  // rmfr(path.resolve(process.cwd(), 'page-min.jpg'));
+  // rmfr(path.resolve(process.cwd(), 'assets'));
 });
 
 gulp.task('watch', () => {
@@ -379,5 +391,27 @@ gulp.task('watch', () => {
     module.livereload();
   }
 
-  gulp.start('build');
+  module.build();
+});
+
+gulp.task('production', () => {
+  process.env.NODE_ENV = 'production';
+
+  LOCALS.MINIFY = true;
+  LOCALS.HASH = LOCALS.BUILD_VERSION;
+  LOCALS.ENV = process.env.NODE_ENV;
+  LOCALS.NODE_ENV = process.env.NODE_ENV;
+
+  module.build();
+});
+
+gulp.task('review', () => {
+  process.env.NODE_ENV = 'production';
+
+  LOCALS.MINIFY = true;
+  LOCALS.HASH = LOCALS.BUILD_VERSION;
+  LOCALS.ENV = process.env.NODE_ENV;
+  LOCALS.NODE_ENV = process.env.NODE_ENV;
+
+  gulp.start('watch');
 });

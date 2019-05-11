@@ -9,9 +9,5 @@ end_of_line = lf
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-# Capability with `package.json` format from npm or other tools
-[*.json]
-insert_final_newline = false
-
 [*.md]
 trim_trailing_whitespace = false

@@ -5,6 +5,6 @@
     padding-left: calc(var(--base-gap) / 2);
     padding-right: @padding-left;
 
-    max-width: @from-md 720px @from-lg 960px @from-xl 1140px;
+    max-width: @from-sm 540px @from-md 720px @from-lg 960px @from-xl 1170px;
   }
 }
