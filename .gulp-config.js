@@ -40,23 +40,23 @@ module.exports = () => ({
       },
     ],
 
-    // img: {
-    //   watchOn: 'source/img/**/*',
-    //   dest: `${DEST}/assets/img`,
-    // },
+    img: {
+      watchOn: 'source/img/**/*',
+      dest: `${DEST}/assets/img`,
+    },
 
-    // static: {
-    //   watchOn: 'source/static/**/*',
-    //   dest: DEST,
-    // },
+    static: {
+      watchOn: 'source/static/**/*',
+      dest: DEST,
+    },
 
-    // icons: [
-    //   {
-    //     watchOn: 'source/icons/**/*.svg',
-    //     dest: `${DEST}/assets/`,
-    //     fileName: 'icons.svg',
-    //     iconId: 'icon-%s',
-    //   },
-    // ],
+    icons: [
+      {
+        watchOn: 'source/icons/**/*.svg',
+        dest: `${DEST}/assets/`,
+        fileName: 'icons.svg',
+        iconId: 'icon-%s',
+      },
+    ],
   },
 });
