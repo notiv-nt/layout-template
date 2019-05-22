@@ -6,6 +6,7 @@ module.exports = () => ({
   // null, 'livereload', 'browsersync'
   devServer: 'browsersync',
   browserlist: '> 1%, ie 11',
+  useHash: true,
 
   tasks: {
     html: {
@@ -19,7 +20,7 @@ module.exports = () => ({
 
     css: {
       watchOn: 'source/css/**/*.css',
-      entry: ['source/css/index.css' /* 'source/css/first-screen.css' */],
+      entry: ['source/css/index.css'],
       dest: `${DEST}/assets/css`,
     },
 
