@@ -36,7 +36,9 @@ module.exports = () => ({
         entry: 'source/js/sw.js',
         dest: DEST,
         params: {
-          useFallback: false,
+          format: 'esm',
+          useBabel: false,
+          // minify: false,
         },
       },
     ],
