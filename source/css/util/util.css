@@ -2,9 +2,11 @@
   &-icon {
     display: inline-block;
     vertical-align: middle;
-    fill: var(--icon-color, currentColor);
-    color: @fill;
+
     width: var(--icon-size, 1em);
     height: @width;
+
+    fill: var(--icon-color, currentColor);
+    color: @fill;
   }
 }

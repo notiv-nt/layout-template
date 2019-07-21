@@ -1,7 +1,7 @@
 @import 'vendor';
 
-@import 'variables';
 @import 'lib/*';
+@import 'variables';
 @import 'base';
 
 @import 'util/**';
